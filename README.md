@@ -1,6 +1,6 @@
 # Sample Simple CI/CD App
 
-OpenShift 初心者向けの **最小構成 CI/CD デモ** です。  
+**最小構成の CI/CD デモ** です。  
 C++ で書かれたシンプルな HTTP サーバーを、**Tekton Pipeline** でビルド・デプロイします。
 
 ## 概要
@@ -65,7 +65,7 @@ sample-simple-cicd-app/
 
 | イメージ | 用途 |
 |---------|------|
-| `devspaces/udi-rhel9:latest` | Containerfile のビルドステージ (gcc/cmake) |
+| `devspaces/udi-rhel9:latest` | Containerfile のビルドステージ (gcc/cmake がプリインストールされたRH イメージとして使用。DevSpaces 自体は不要) |
 | `ubi9/ubi:latest` | Containerfile のランタイムステージ |
 | `openshift4/ose-cli:latest` | Pipeline の deploy タスク |
 
