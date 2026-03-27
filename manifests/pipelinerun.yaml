@@ -1,0 +1,41 @@
+# =============================================================================
+# PipelineRun: パイプラインの手動実行
+#
+# 使い方:
+#   oc create -f manifests/pipelinerun.yaml
+#
+# generateName を使用しているため、実行するたびに新しい PipelineRun が
+# 作成されます。「oc create」を使ってください（oc apply ではありません）。
+#
+# カスタマイズ箇所:
+#   - <NAMESPACE>       : プロジェクト名
+#   - <GITEA_HOST>      : Gitea のホスト名
+#   - <GITEA_OWNER>     : Gitea のオーナー名
+#   - <MIRROR_REGISTRY> : ミラーレジストリのホスト名
+# =============================================================================
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: simple-cicd-run-
+  namespace: simple-cicd
+spec:
+  pipelineRef:
+    name: simple-cicd-pipeline
+  params:
+    - name: git-url
+      value: "https://github.com/kmotojim/sample-simple-cicd-app.git"
+    - name: git-revision
+      value: "main"
+    - name: image-name
+      value: "image-registry.openshift-image-registry.svc:5000/simple-cicd/hello-server"
+  workspaces:
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  timeouts:
+    pipeline: 30m

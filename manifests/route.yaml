@@ -1,0 +1,22 @@
+# =============================================================================
+# Route (OpenShift)
+#
+# カスタマイズ箇所:
+#   - <NAMESPACE> : プロジェクト名
+# =============================================================================
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hello-server
+  namespace: simple-cicd
+  labels:
+    app: hello-server
+spec:
+  to:
+    kind: Service
+    name: hello-server
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge

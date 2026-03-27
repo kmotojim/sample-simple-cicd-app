@@ -1,0 +1,133 @@
+# =============================================================================
+# Tekton Pipeline: simple-cicd-pipeline
+#
+# フロー: git-clone → build-image (buildah) → deploy
+#
+# カスタマイズ箇所:
+#   - <MIRROR_REGISTRY> : ミラーレジストリのホスト名
+#   - <NAMESPACE>       : プロジェクト名
+#   - <GITEA_HOST>      : Gitea のホスト名
+#   - <GITEA_OWNER>     : Gitea のオーナー名
+# =============================================================================
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: simple-cicd-pipeline
+  namespace: simple-cicd
+spec:
+  params:
+    - name: git-url
+      type: string
+      description: Git リポジトリの URL
+      default: "https://github.com/kmotojim/sample-simple-cicd-app.git"
+    - name: git-revision
+      type: string
+      description: Git リビジョン (ブランチ、タグ、コミット SHA)
+      default: "main"
+    - name: image-name
+      type: string
+      description: ビルドするコンテナイメージ名
+      default: "image-registry.openshift-image-registry.svc:5000/simple-cicd/hello-server"
+
+  workspaces:
+    - name: shared-workspace
+      description: ソースコードを共有するワークスペース
+
+  tasks:
+    # -----------------------------------------------------------------
+    # Task 1: ソースコードのクローン (ClusterTask)
+    # -----------------------------------------------------------------
+    - name: git-clone
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: URL
+          value: $(params.git-url)
+        - name: REVISION
+          value: $(params.git-revision)
+        - name: DELETE_EXISTING
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    # -----------------------------------------------------------------
+    # Task 2: コンテナイメージのビルド & プッシュ (ClusterTask)
+    #
+    # Containerfile 内で CMake ビルドも実行されるため、
+    # 別途ビルドタスクは不要です。
+    # -----------------------------------------------------------------
+    - name: build-image
+      runAfter:
+        - git-clone
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: IMAGE
+          value: "$(params.image-name):$(params.git-revision)"
+        - name: DOCKERFILE
+          value: ./Containerfile
+        - name: TLS_VERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    # -----------------------------------------------------------------
+    # Task 3: OpenShift へデプロイ
+    # -----------------------------------------------------------------
+    - name: deploy
+      runAfter:
+        - build-image
+      taskSpec:
+        params:
+          - name: image
+            type: string
+          - name: namespace
+            type: string
+        steps:
+          - name: deploy
+            image: registry.redhat.io/openshift4/ose-cli:latest
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+
+              echo "=== Deploying to $(params.namespace) ==="
+
+              oc set image deployment/hello-server \
+                hello-server="$(params.image)" \
+                -n "$(params.namespace)"
+
+              # タグが同じ場合でも新しいイメージで再デプロイする
+              oc rollout restart deployment/hello-server \
+                -n "$(params.namespace)"
+
+              oc rollout status deployment/hello-server \
+                -n "$(params.namespace)" \
+                --timeout=120s
+
+              ROUTE_HOST=$(oc get route hello-server \
+                -n "$(params.namespace)" \
+                -o jsonpath='{.spec.host}' 2>/dev/null || echo "N/A")
+
+              echo "=== Deploy complete! ==="
+              echo "App URL: https://${ROUTE_HOST}"
+      params:
+        - name: image
+          value: "$(params.image-name):$(params.git-revision)"
+        - name: namespace
+          value: "simple-cicd"
