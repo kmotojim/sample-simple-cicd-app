@@ -15,12 +15,11 @@ COPY CMakeLists.txt .
 COPY src/ src/
 
 RUN mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
     cmake --build . --parallel $(nproc)
 
 # --- Runtime stage ---
-FROM registry.redhat.io/ubi9/ubi-minimal:latest
+FROM registry.redhat.io/ubi9/ubi:latest
 
 COPY --from=builder /app/build/hello-server /usr/local/bin/hello-server
 
