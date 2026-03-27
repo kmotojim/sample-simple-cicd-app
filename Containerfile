@@ -7,7 +7,7 @@
 
 # --- Builder stage ---
 # gcc-c++, cmake, make がプリインストールされた DevSpaces UDI イメージ
-FROM registry.redhat.io/devspaces/udi-rhel9:latest AS builder
+FROM <MIRROR_REGISTRY>/devspaces/udi-rhel9:latest AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ RUN mkdir build && cd build && \
     cmake --build . --parallel $(nproc)
 
 # --- Runtime stage ---
-FROM registry.redhat.io/ubi9/ubi:latest
+FROM <MIRROR_REGISTRY>/ubi9/ubi:latest
 
 COPY --from=builder /app/build/hello-server /usr/local/bin/hello-server
 

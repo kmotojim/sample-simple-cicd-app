@@ -13,13 +13,13 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: simple-cicd-pipeline
-  namespace: simple-cicd
+  namespace: <NAMESPACE>
 spec:
   params:
     - name: git-url
       type: string
       description: Git リポジトリの URL
-      default: "https://github.com/kmotojim/sample-simple-cicd-app.git"
+      default: "https://<GITEA_HOST>/<GITEA_OWNER>/sample-simple-cicd-app.git"
     - name: git-revision
       type: string
       description: Git リビジョン (ブランチ、タグ、コミット SHA)
@@ -27,7 +27,7 @@ spec:
     - name: image-name
       type: string
       description: ビルドするコンテナイメージ名
-      default: "image-registry.openshift-image-registry.svc:5000/simple-cicd/hello-server"
+      default: "<MIRROR_REGISTRY>/sample-simple-cicd-app/hello-server"
 
   workspaces:
     - name: shared-workspace
@@ -101,7 +101,7 @@ spec:
             type: string
         steps:
           - name: deploy
-            image: registry.redhat.io/openshift4/ose-cli:latest
+            image: <MIRROR_REGISTRY>/openshift4/ose-cli:latest
             script: |
               #!/usr/bin/env bash
               set -euo pipefail
@@ -130,4 +130,4 @@ spec:
         - name: image
           value: "$(params.image-name):$(params.git-revision)"
         - name: namespace
-          value: "simple-cicd"
+          value: "<NAMESPACE>"

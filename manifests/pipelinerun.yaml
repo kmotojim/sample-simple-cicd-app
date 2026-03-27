@@ -17,17 +17,17 @@ apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   generateName: simple-cicd-run-
-  namespace: simple-cicd
+  namespace: <NAMESPACE>
 spec:
   pipelineRef:
     name: simple-cicd-pipeline
   params:
     - name: git-url
-      value: "https://github.com/kmotojim/sample-simple-cicd-app.git"
+      value: "https://<GITEA_HOST>/<GITEA_OWNER>/sample-simple-cicd-app.git"
     - name: git-revision
       value: "main"
     - name: image-name
-      value: "image-registry.openshift-image-registry.svc:5000/simple-cicd/hello-server"
+      value: "<MIRROR_REGISTRY>/sample-simple-cicd-app/hello-server"
   workspaces:
     - name: shared-workspace
       volumeClaimTemplate:

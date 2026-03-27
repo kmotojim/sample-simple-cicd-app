@@ -9,7 +9,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-server
-  namespace: simple-cicd
+  namespace: <NAMESPACE>
   labels:
     app: hello-server
 spec:
@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: hello-server
-          image: image-registry.openshift-image-registry.svc:5000/simple-cicd/hello-server:latest
+          image: <MIRROR_REGISTRY>/sample-simple-cicd-app/hello-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

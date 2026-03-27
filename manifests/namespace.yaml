@@ -7,6 +7,6 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: simple-cicd
+  name: <NAMESPACE>
   labels:
     app: hello-server

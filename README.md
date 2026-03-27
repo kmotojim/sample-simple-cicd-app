@@ -42,7 +42,7 @@ sample-simple-cicd-app/
                               ↓
                         [build-image]  ← Containerfile で CMake ビルド + イメージ作成
                               ↓
-                          [deploy]     ← oc set image + oc rollout status
+                          [deploy]     ← oc set image + oc rollout restart
                               ↓
                         ブラウザで確認!
 ```
@@ -66,7 +66,7 @@ sample-simple-cicd-app/
 | イメージ | 用途 |
 |---------|------|
 | `devspaces/udi-rhel9:latest` | Containerfile のビルドステージ (gcc/cmake) |
-| `ubi9/ubi-minimal:latest` | Containerfile のランタイムステージ |
+| `ubi9/ubi:latest` | Containerfile のランタイムステージ |
 | `openshift4/ose-cli:latest` | Pipeline の deploy タスク |
 
 ---
@@ -124,7 +124,7 @@ git push -u origin main
 
 ```bash
 # OpenShift にログイン
-oc login https://api.example.com:6443
+oc login https://<API_SERVER>:6443
 
 # Namespace を作成
 oc apply -f manifests/namespace.yaml
