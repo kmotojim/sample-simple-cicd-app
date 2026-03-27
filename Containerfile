@@ -9,19 +9,20 @@
 # gcc-c++, cmake, make がプリインストールされた DevSpaces UDI イメージ
 FROM registry.redhat.io/devspaces/udi-rhel9:latest AS builder
 
-WORKDIR /build
+WORKDIR /app
 
 COPY CMakeLists.txt .
 COPY src/ src/
 
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" && \
-    cmake --build build --parallel $(nproc)
+RUN mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" .. && \
+    cmake --build . --parallel $(nproc)
 
 # --- Runtime stage ---
 FROM registry.redhat.io/ubi9/ubi-minimal:latest
 
-COPY --from=builder /build/build/hello-server /usr/local/bin/hello-server
+COPY --from=builder /app/build/hello-server /usr/local/bin/hello-server
 
 EXPOSE 8080
 
